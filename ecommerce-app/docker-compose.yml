@@ -1,0 +1,52 @@
+
+services:
+  web-app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: aura-ecommerce-app
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+      - DB_HOST=db
+      - DB_PORT=3306
+      - DB_USER=aura_user
+      - DB_PASSWORD=aura_password
+      - DB_NAME=aura_db
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - aura-network
+
+  db:
+    image: mysql:8.0
+    container_name: aura-ecommerce-db
+    restart: unless-stopped
+    ports:
+      - "3306:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: root_password
+      MYSQL_DATABASE: aura_db
+      MYSQL_USER: aura_user
+      MYSQL_PASSWORD: aura_password
+    volumes:
+      - mysql-data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p=root_password"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - aura-network
+
+networks:
+  aura-network:
+    driver: bridge
+
+volumes:
+  mysql-data:
+    driver: local
